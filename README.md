@@ -30,8 +30,16 @@ And the meta moves fast. What counted as a best practice six months ago is alrea
 - **4-phase project playbook** -- from idea to self-sustaining operation: foundation, build, operationalize, evolve.
 - **Agent routing and cost model** -- how to structure multi-agent systems with cost-tier routing (80% Haiku / 15% Sonnet / 5% Opus).
 - **Evolution protocol** -- how to update the Bible as you learn, so it doesn't go stale.
+- **`/qq-bible-add` slash command** -- included in `commands/`. Feed it a URL, a paste, or a link. It judges merit, maps the item against what already exists, and integrates if worthy. This is how the document evolves.
 
-**Add it to Claude Code:** Create `~/.claude/rules/build-bible.md` pointing at this file. Claude ingests it every session. No cloning, no setup -- just a one-line reference.
+**Add it to Claude Code:**
+
+```
+git clone https://github.com/lee-fuhr/build-bible ~/build-bible
+cp ~/build-bible/commands/qq-bible-add.md ~/.claude/commands/
+```
+
+Then create `~/.claude/rules/build-bible.md` pointing at `~/build-bible/build-bible.md`. Claude ingests the methodology every session. Run `/qq-bible-add [url or paste]` whenever you find something worth keeping.
 
 ---
 
