@@ -12,13 +12,15 @@ The real cost isn't any single mistake. It's the compounding. Every time you rei
 
 After enough sessions, you start noticing the debt: god files you can't refactor, sync jobs you can't untangle, research agents running for weeks without checkpoints. The problems don't announce themselves. They're invisible until they're expensive.
 
+And the meta moves fast. What counted as a best practice six months ago is already outdated. New agent patterns, new orchestration approaches, new failure modes -- the community is learning faster than any individual can track. Most people are building on stale foundations without knowing it.
+
 ## What changes
 
 **You stop reinventing.** 19 proven patterns with specific use cases and production citations. When a problem looks familiar, you reach for the pattern instead of rebuilding from memory.
 
 **You catch mistakes before they cost you.** 8 named failure modes -- the 49-day research agent, the premature learning engine, the god file -- each with specific evidence of what it costs. Naming a thing is most of solving it.
 
-**Your system improves instead of decaying.** The evolution protocol makes the Bible a living document. Principles accumulate production evidence. Patterns get updated when they fail. What you learn doesn't stay in one session.
+**Your system improves instead of decaying.** The evolution protocol makes the Bible a living document. Principles accumulate production evidence. Patterns get updated when they fail. New techniques from the community get synthesized in. What the field learns, you learn.
 
 ## What's in it
 
@@ -32,6 +34,12 @@ After enough sessions, you start noticing the debt: god files you can't refactor
 **Add it to Claude Code:** Create `~/.claude/rules/build-bible.md` pointing at this file. Claude ingests it every session. No cloning, no setup -- just a one-line reference.
 
 ---
+
+## Contributing
+
+The meta for building with AI agents changes fast. New patterns emerge from production, Reddit, and community experiments constantly. The Build Bible stays useful by synthesizing what actually works -- but it needs input from people building in the field.
+
+If you've found a principle that belongs here, an anti-pattern that should be named, a pattern that's proven out in your own system, or something in the current Bible that no longer holds -- open an issue or a PR. That's the mechanism.
 
 ## Part of the stack
 
