@@ -1,72 +1,46 @@
 # Build Bible
 
-**How to build with AI agents. 14 principles, 19 patterns, 8 anti-patterns, a full playbook, and an evolution protocol — all battle-tested across real projects.**
+Building with Claude Code without a methodology is just hoping. This document makes it a practice.
 
 ---
 
-## What this is
+## The problem
 
-A methodology document for building software with Claude Code and AI agent systems. Not theory — every principle has evidence from production use, every pattern has a "proven in" citation, and every anti-pattern has a "cost" showing what happens when you ignore it.
+You build something with Claude Code. It works. Three weeks later, the same agent makes different decisions, the same pattern looks different in a new project, the same mistake happens again. You're not building a system -- you're accumulating sessions.
 
-The Bible covers:
+The real cost isn't any single mistake. It's the compounding. Every time you reinvent instead of reuse, every time you skip an anti-pattern you already know, every time a new session starts without the shared vocabulary from the last one -- you're paying for the same work twice.
 
-- **14 principles** — the non-negotiable rules (TDD, simplicity, single source of truth, atomic operations, etc.)
-- **19 reusable patterns** — proven approaches you can lift into your own system (tiered agent model, approval queue, config-driven scaling, etc.)
-- **8 anti-patterns** — what goes wrong and what it costs (the 49-day research agent, the premature learning engine, the god file, etc.)
-- **4-phase playbook** — how to take a project from idea to self-sustaining operation
-- **Agent routing** — how to structure multi-agent systems with cost-tier routing
-- **Evolution protocol** — how to keep the Bible itself alive as you learn
+After enough sessions, you start noticing the debt: god files you can't refactor, sync jobs you can't untangle, research agents running for weeks without checkpoints. The problems don't announce themselves. They're invisible until they're expensive.
 
-## Who this is for
+## What changes
 
-Anyone building with Claude Code who wants a structured methodology for:
-- Multi-agent orchestration (conductor pattern, agent teams, delegation)
-- AI-augmented operations (hooks, LaunchAgents, automated pipelines)
-- Sustainable AI development practices (TDD, verification, checkpoints)
+**You stop reinventing.** 19 proven patterns with specific use cases and production citations. When a problem looks familiar, you reach for the pattern instead of rebuilding from memory.
 
-## How to use it
+**You catch mistakes before they cost you.** 8 named failure modes -- the 49-day research agent, the premature learning engine, the god file -- each with specific evidence of what it costs. Naming a thing is most of solving it.
 
-**Option 1: Read it.** The document is self-contained. Start with the principles (section 1), then browse patterns (section 2) for things relevant to your current work.
+**Your system improves instead of decaying.** The evolution protocol makes the Bible a living document. Principles accumulate production evidence. Patterns get updated when they fail. What you learn doesn't stay in one session.
 
-**Option 2: Adopt it.** Fork this repo and make it yours:
-1. Replace the evidence citations with your own project examples
-2. Add principles you discover through your own work
-3. Remove patterns you don't use
-4. Use the evolution protocol (section 8) to keep it current
+## What's in it
 
-**Option 3: Load it into Claude Code.** Add to your `~/.claude/rules/` directory:
-```markdown
-<!-- ~/.claude/rules/build-bible.md -->
-## How we build (bible reference)
-Full bible: /path/to/build-bible.md
-Load when: Starting a project, making architecture decisions, reviewing code.
-```
+- **14 principles** -- the non-negotiable rules: TDD, atomic operations, single source of truth, simplicity, checkpoint gates, and nine more. Each backed by evidence, not opinion.
+- **19 reusable patterns** -- tiered agent model, approval queue, config-driven scaling, conductor pattern, and sixteen more. Each with a selection guide so you know when to reach for it.
+- **8 anti-patterns with costs** -- specific names for the failure modes, specific evidence of what they cost. Recognize them fast.
+- **4-phase project playbook** -- from idea to self-sustaining operation: foundation, build, operationalize, evolve.
+- **Agent routing and cost model** -- how to structure multi-agent systems with cost-tier routing (80% Haiku / 15% Sonnet / 5% Opus).
+- **Evolution protocol** -- how to update the Bible as you learn, so it doesn't go stale.
 
-## Document structure
-
-| Section | What it covers |
-|---------|---------------|
-| 0 | Meta — version, scope, how to read |
-| 1 | 14 principles with evidence |
-| 2 | 19 reusable patterns with pointers |
-| 3 | 5-layer architecture model |
-| 4 | 4-phase project playbook |
-| 5 | Agent routing and cost model |
-| 6 | 8 anti-patterns with costs |
-| 7 | System inventory and integration map |
-| 8 | Evolution protocol |
-| 9 | Technical debt inventory |
-| 10 | Sources and references |
-
-## Related projects
-
-- **[Memeta](https://github.com/lee-fuhr/memeta)** — FSRS-6 memory system for Claude Code (the memory layer referenced in the Bible)
-- **[Atlas](https://github.com/lee-fuhr/atlas)** — Architectural governing document (the KCA model that organizes the system the Bible describes)
-
-## License
-
-MIT — see [LICENSE](LICENSE)
+**Add it to Claude Code:** Create `~/.claude/rules/build-bible.md` pointing at this file. Claude ingests it every session. No cloning, no setup -- just a one-line reference.
 
 ---
 
-*A living document. Use the evolution protocol to keep it honest.*
+## Part of the stack
+
+| Repo | Role |
+|------|------|
+| [Atlas](https://github.com/lee-fuhr/atlas) | Framework -- where every component lives and why |
+| [Memeta](https://github.com/lee-fuhr/memeta) | Memory -- what Claude remembers across sessions |
+| [ai-ops-starter](https://github.com/lee-fuhr/ai-ops-starter) | Scaffolding -- the folder structure and templates to stand up a system |
+
+---
+
+MIT -- see [LICENSE](LICENSE)
