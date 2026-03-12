@@ -46,8 +46,8 @@
 | **4** Project playbook | Starting a new project or phase; "what's the full lifecycle for this?" |
 | **5** Agent system | Any delegation decision; multi-agent sequencing; routing; "who handles this?" |
 | **6** Anti-patterns | Something feels wrong; seeing a code smell or architectural red flag; "have we seen this before?" |
-| **7** Operations reference | "What scripts/services exist?"; rationale for a specific component |
-| **8** Evolution protocol | Updating the Bible or any governing doc; codifying a learning |
+| **7** System inventory | "What exists?"; verifying component counts; rationale for a specific script/agent |
+| **8** Evolution protocol | Updating the Bible, Atlas, CLAUDE.md, or any governing doc; codifying a learning |
 | **9** Known debt | Prioritizing refactors; assessing technical risk; "is this on the debt list?" |
 | **10** Credits & sources | Tracing where a principle came from; audit/provenance questions |
 
