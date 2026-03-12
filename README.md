@@ -35,14 +35,10 @@ And the meta moves fast. What counted as a best practice six months ago is alrea
 **Add it to Claude Code:**
 
 ```
-git clone https://github.com/lee-fuhr/build-bible ~/build-bible
-cp ~/build-bible/commands/qq-bible-add.md ~/.claude/commands/
-cp ~/build-bible/rules/build-bible.md ~/.claude/rules/
+curl -fsSL https://raw.githubusercontent.com/lee-fuhr/build-bible/main/install.sh | bash
 ```
 
-`rules/build-bible.md` is a pre-built reference card — all 14 principles, the anti-pattern table, and a section trigger index so Claude knows exactly when to pull which section. It auto-loads every session.
-
-Run `/qq-bible-add [url or paste]` whenever you find something worth keeping.
+Installs the reference card (`~/.claude/rules/build-bible.md`) and the `/qq-bible-add` command. Start a new session and the Bible is active. Run `/qq-bible-add [url or paste]` whenever you find something worth keeping.
 
 ---
 
