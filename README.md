@@ -2,6 +2,17 @@
 
 Building with Claude Code without a methodology is just hoping. This document makes it a practice.
 
+### Part of the stack
+
+These four repos capture best practices from production use, open-source repos, and community experiments — synthesized, deduplicated, and maintained as a single living reference. What the field learns, these learn.
+
+| Repo | What it does |
+|------|-------------|
+| **[Build Bible](https://github.com/lee-fuhr/build-bible)** | Every engineering principle and pattern that's proven out in production with AI agents, unified into one methodology. |
+| **[Atlas](https://github.com/lee-fuhr/atlas)** | Every architectural pattern for where components live in a Claude Code system, so nothing is ad hoc. |
+| **[Memeta](https://github.com/lee-fuhr/memeta)** | Every memory technique that works — extraction, scoring, search, decay, recall — all coexisting additively. |
+| **[ai-ops-starter](https://github.com/lee-fuhr/ai-ops-starter)** | Everything you need to stand up the system: folder structure, hooks, skills, templates. Minutes, not months. |
+
 ---
 
 ## The problem
@@ -48,17 +59,6 @@ The meta for building with AI agents changes fast. New patterns emerge from prod
 
 If you've found a principle that belongs here, an anti-pattern that should be named, a pattern that's proven out in your own system, or something in the current Bible that no longer holds -- open an issue or a PR. That's the mechanism.
 
-## Part of the stack
-
-These four repos work together. Each one captures best practices from production use, open-source repos, and community experiments — synthesized, deduplicated, and maintained as a single living reference. What the field learns, these learn.
-
-| Repo | What it does |
-|------|-------------|
-| **[Build Bible](https://github.com/lee-fuhr/build-bible)** | Every engineering principle and pattern that's proven out in production with AI agents, unified into one methodology. |
-| **[Atlas](https://github.com/lee-fuhr/atlas)** | Every architectural pattern for where components live in a Claude Code system, so nothing is ad hoc. |
-| **[Memeta](https://github.com/lee-fuhr/memeta)** | Every memory technique that works — extraction, scoring, search, decay, recall — all coexisting additively. |
-| **[ai-ops-starter](https://github.com/lee-fuhr/ai-ops-starter)** | Everything you need to stand up the system: folder structure, hooks, skills, templates. Minutes, not months. |
-
 ---
 
-MIT -- see [LICENSE](LICENSE)
+MIT — see [LICENSE](LICENSE)
