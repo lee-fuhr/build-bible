@@ -1,17 +1,15 @@
 # Build Bible
 
-Building with Claude Code without a methodology is just hoping. This document makes it a practice.
+The Claude Code community is producing engineering wisdom faster than anyone can track. This is the synthesis — principles, patterns, and failure modes pulled from Reddit threads, trending repos, and production war stories, so you get the signal without doing the reading.
 
 ### Part of the stack
 
-These four repos capture best practices from production use, open-source repos, and community experiments — synthesized, deduplicated, and maintained as a single living reference. What the field learns, these learn.
-
 | Repo | What it does |
 |------|-------------|
-| **[Build Bible](https://github.com/lee-fuhr/build-bible)** | Every engineering principle and pattern that's proven out in production with AI agents, unified into one methodology. |
-| **[Atlas](https://github.com/lee-fuhr/atlas)** | Every architectural pattern for where components live in a Claude Code system, so nothing is ad hoc. |
-| **[Memeta](https://github.com/lee-fuhr/memeta)** | Every memory technique that works — extraction, scoring, search, decay, recall — all coexisting additively. |
-| **[ai-ops-starter](https://github.com/lee-fuhr/ai-ops-starter)** | Everything you need to stand up the system: folder structure, hooks, skills, templates. Minutes, not months. |
+| **[Build Bible](https://github.com/lee-fuhr/build-bible)** | The engineering methodology — principles, patterns, and failure modes from across the field, synthesized into one living reference. |
+| **[Atlas](https://github.com/lee-fuhr/atlas)** | The architectural model — a structural framework for where every component lives, built from the patterns that hold together at scale. |
+| **[Memeta](https://github.com/lee-fuhr/memeta)** | The memory system — every technique that works for giving AI agents persistent memory, unified and coexisting additively. |
+| **[Scaffold](https://github.com/lee-fuhr/scaffold)** | The starter kit — folder structure, hooks, skills, and templates that production systems converge on, ready to clone. |
 
 ---
 
