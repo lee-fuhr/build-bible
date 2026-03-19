@@ -25,8 +25,8 @@ And the meta moves fast. What counted as a best practice six months ago is alrea
 ## What's in it
 
 - **14 principles** -- the non-negotiable rules: TDD, atomic operations, single source of truth, simplicity, checkpoint gates, and nine more. Each backed by evidence, not opinion.
-- **19 reusable patterns** -- tiered agent model, approval queue, config-driven scaling, conductor pattern, and sixteen more. Each with a selection guide so you know when to reach for it.
-- **8 anti-patterns with costs** -- specific names for the failure modes, specific evidence of what they cost. Recognize them fast.
+- **20 reusable patterns** -- tiered agent model, approval queue, config-driven scaling, conductor pattern, and sixteen more. Each with a selection guide so you know when to reach for it.
+- **10 anti-patterns with costs** -- specific names for the failure modes, specific evidence of what they cost. Recognize them fast.
 - **4-phase project playbook** -- from idea to self-sustaining operation: foundation, build, operationalize, evolve.
 - **Agent routing and cost model** -- how to structure multi-agent systems with cost-tier routing (80% Haiku / 15% Sonnet / 5% Opus).
 - **Evolution protocol** -- how to update the Bible as you learn, so it doesn't go stale.
@@ -50,11 +50,14 @@ If you've found a principle that belongs here, an anti-pattern that should be na
 
 ## Part of the stack
 
-| Repo | Role |
-|------|------|
-| [Atlas](https://github.com/lee-fuhr/atlas) | Framework -- where every component lives and why |
-| [Memeta](https://github.com/lee-fuhr/memeta) | Memory -- what Claude remembers across sessions |
-| [ai-ops-starter](https://github.com/lee-fuhr/ai-ops-starter) | Scaffolding -- the folder structure and templates to stand up a system |
+These four repos work together. Each solves a different problem.
+
+| Repo | What it does |
+|------|-------------|
+| **[Build Bible](https://github.com/lee-fuhr/build-bible)** | How to build. Principles, patterns, and anti-patterns so you stop reinventing and start compounding. |
+| **[Atlas](https://github.com/lee-fuhr/atlas)** | Where things live. A structural model for Claude Code systems so components have a home instead of a pile. |
+| **[Memeta](https://github.com/lee-fuhr/memeta)** | What Claude remembers. Persistent memory across sessions — extraction, scoring, search, decay, and recall. |
+| **[ai-ops-starter](https://github.com/lee-fuhr/ai-ops-starter)** | Get started fast. Folder structure, hooks, skills, and templates to stand up a working system in minutes. |
 
 ---
 
