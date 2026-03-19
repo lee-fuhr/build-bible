@@ -1661,8 +1661,13 @@ All plist files live in `~/Library/LaunchAgents/`. Active agents as of 2026-03:
 | `com.macwhisper.processor` | Continuous | Watch for MacWhisper transcripts |
 | `com.granola.checker` | Continuous | Monitor Granola cache |
 | `com.lfi.db-backup` | Daily 3am | Safe SQLite backup to Google Drive |
+| `com.memeta.consolidation-worker` | Every 15min | Process async consolidation queue |
+| `com.memeta.search-index-rebuild` | Every 30min | Rebuild BM25 search index for memory injection |
+| `com.memeta.skill-evolution-snapshot` | Daily 2am | Snapshot skill provenance and evolution data |
+| `com.memeta.memory-freshness-review` | Sunday 9am | Scan for stale memories, send notification |
+| `com.memeta.claudemd-synthesizer` | Sunday 4am | Graduate confirmed corrections to CLAUDE.md rules |
 
-**Note:** The full system runs 47 LaunchAgents. The table above inventories the ones most relevant to this bible. The remaining 20 are utility agents (dashboard servers, memory services, monitoring daemons) not detailed here.
+**Note:** The full system runs 52 LaunchAgents. The table above inventories the ones most relevant to this bible. The remaining agents are utility services (dashboard servers, monitoring daemons) not detailed here.
 
 **Continuous services** (RunAtLoad + KeepAlive): dashboard-server, memory-server, memory-dashboard, total-recall-dashboard, outreach-dashboard, unified-health-monitor, macwhisper.processor, granola.checker.
 
