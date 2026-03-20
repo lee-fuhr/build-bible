@@ -4,6 +4,32 @@ All notable changes to the Build Bible are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/) — MAJOR for structural changes, MINOR for new principles/patterns, PATCH for refinements.
 
+## [2.0.0] - 2026-03-19
+
+Philosophical shift in how the Bible treats enforcement. Inspired by reviewing [a5c-ai/babysitter](https://github.com/a5c-ai/babysitter) (shared by Mike Bodkin in Bureau Slack) and the Gia dashboard incident (2026-03-19). The core insight: our system advises discipline but doesn't enforce it. Advisory rules get blown past under build momentum. This version reframes enforcement from "the conductor is disciplined" to "the system makes violations impossible for critical paths."
+
+### Added
+- **Principle 1.15: Enforce boundaries, don't advise them** — three enforcement levels (advisory → blocking → deterministic), the diagnostic question ("if the agent ignored this, what prevents the violation?"), process-as-authority for critical workflows.
+- **Anti-pattern 6.11: The advisory illusion** — governance that exists only in prompts/rules with no runtime enforcement. Diagnostic: "what would prevent violation if the agent ignored this?" Evidence: Gia dashboard trashed despite existing Bible principles.
+- **Pattern 2.21: Event-sourced decision journal** — append-only JSONL of every orchestration decision (STEP_START, GATE_PASS, GATE_FAIL, BREAKPOINT, ERROR). Enables replay (audit) and resume (continuation). Distinct from git checkpoints (rollback).
+- **Convergence loops (§1.7)** — when a quality gate fails and failure is refinement-eligible, feed gate failure feedback into next iteration (not blind retry). Max 3 iterations before human escalation.
+- **Enforcement chain (15 → 8 → 7)** — enforce deterministically, validate before acting, gate at checkpoints. New interaction chain in principle model.
+- **Annual enforcement review** added to §8.2 review cadence.
+- **Debt item** for advisory-level enforcement classified as HIGH.
+- Credits for [a5c-ai/babysitter](https://github.com/a5c-ai/babysitter) + Mike Bodkin.
+
+### Changed
+- **§3.6 upgraded from enforcement traceability matrix to enforcement contract** — every principle now has a current enforcement level, target level, and target date. The matrix becomes a governance contract, not just a diagnostic. 4 principles queued for upgrade to blocking (1.2, 1.3, 1.7, 1.15).
+- **§5.6 upgraded from agent permission architecture to enforcement architecture** — now includes process-as-authority principle, step-boundary enforcement, enforcement maturity model (advisory/blocking/deterministic), and links to process definitions.
+- **§8.2 quarterly cadence** now requires pushing at least one principle from advisory → blocking, prioritized by incident history.
+- Anti-patterns section header updated from "eight" to "eleven" named failure modes (6.9 and 6.10 from v1.6.0 were already in body but not counted in header).
+- Anti-patterns summary table now includes 6.9, 6.10, 6.11.
+- TOC updated with 1.15, 2.20, 2.21, 6.9, 6.10, 6.11.
+- Quick reference tables updated with principle 15 and pattern 21.
+- Architecture at-a-glance: 14 → 15 principles, 20 → 21 patterns, "enforcement traceability matrix" → "enforcement contract."
+- Debt summary: 15 → 16 items, 3 → 4 high, added enforcement contract cross-reference.
+- Version bumped to 2.0.0 — MAJOR because this is a philosophical shift in the enforcement model, not just a new principle.
+
 ## [1.7.0] - 2026-03-18
 
 Studied three open-source AI memory systems and extracted what they got right that we hadn't codified yet. The Bible now has better guardrails for LLM scoring pipelines, data imports, and research workflows — areas where we were relying on instinct instead of written practice.

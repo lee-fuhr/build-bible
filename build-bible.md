@@ -1,6 +1,6 @@
 # How we build
-**Version:** 1.7.0
-**Last updated:** 2026-03-18
+**Version:** 2.0.0
+**Last updated:** 2026-03-19
 **Scope:** Product building principles, patterns, and operations for Lee Fuhr's AI-augmented consulting practice.
 **Source:** Distilled from 10+ software products across 68+ sessions. Adversarially reviewed by 3 independent agents.
 
@@ -24,6 +24,7 @@
   - [1.12 Observe everything, alert on what matters](#112-observe-everything-alert-on-what-matters)
   - [1.13 Test the unhappy path first](#113-test-the-unhappy-path-first)
   - [1.14 Speed hides debt (velocity is not progress)](#114-speed-hides-debt-velocity-is-not-progress)
+  - [1.15 Enforce boundaries, don't advise them](#115-enforce-boundaries-dont-advise-them)
   - [Principle interaction model](#principle-interaction-model)
 - [2. Reusable patterns](#2-reusable-patterns)
   - [2.1 Hierarchical cost optimization (80/15/5)](#21-hierarchical-cost-optimization-80155)
@@ -45,6 +46,8 @@
   - [2.17 Backup verification (test your safety nets)](#217-backup-verification-test-your-safety-nets)
   - [2.18 Rate limiting and throttling](#218-rate-limiting-and-throttling)
   - [2.19 Competitive generation (parallel solutions + objective ranking)](#219-competitive-generation-parallel-solutions--objective-ranking)
+  - [2.20 Three-phase discovery processing (panning for gold)](#220-three-phase-discovery-processing-panning-for-gold)
+  - [2.21 Event-sourced decision journal](#221-event-sourced-decision-journal)
   - [Pattern selection guide](#pattern-selection-guide)
 - [3. Architecture](#3-architecture)
   - [3.1 Five-layer system model](#31-five-layer-system-model)
@@ -78,6 +81,9 @@
   - [6.6 Validate-then-pray](#66-validate-then-pray)
   - [6.7 The god file](#67-the-god-file)
   - [6.8 The silent service](#68-the-silent-service)
+  - [6.9 The silent placeholder](#69-the-silent-placeholder)
+  - [6.10 The unenforceable punchlist](#610-the-unenforceable-punchlist)
+  - [6.11 The advisory illusion](#611-the-advisory-illusion)
   - [Summary from patterns](#summary-from-patterns)
 - [7. Operations reference](#7-operations-reference)
   - [7.1 Scripts and services](#71-scripts-and-services)
@@ -108,7 +114,7 @@
 
 ## 0. Quick reference
 
-**Architecture at a glance:** 5 layers / 4-tier CLAUDE.md / 28 hooks / 47 agents / 6 databases / 14 principles / 20 patterns / enforcement traceability matrix (section 3.6) / cross-model routing (section 5.3.1)
+**Architecture at a glance:** 5 layers / 4-tier CLAUDE.md / 28 hooks / 47 agents / 6 databases / 15 principles / 21 patterns / enforcement contract (section 3.6) / cross-model routing (section 5.3.1)
 
 ### Principles quick reference
 
@@ -128,6 +134,7 @@
 | 12 | Observability | Structured logging, health checks, tiered alerting for every service. |
 | 13 | Unhappy path first | Test error paths and edge cases before happy paths. |
 | 14 | Speed hides debt | Fast shipping without verification creates invisible debt. |
+| 15 | Enforce boundaries | If the agent ignored this instruction, what would prevent the violation? |
 
 ### Patterns quick reference
 
@@ -153,6 +160,7 @@
 | 2.18 | Rate limiting | Config-driven send limits, business hours, cooldowns for external APIs. |
 | 2.19 | Competitive generation | Parallel solutions + objective ranking for best artifact. |
 | 2.20 | Panning for gold | Three-phase discovery: extract all, evaluate best, synthesize verdicts. |
+| 2.21 | Event-sourced decision journal | Append-only JSONL of every orchestration decision. Replay and resume. |
 
 ### Phase checklist
 
@@ -169,7 +177,7 @@
 
 ## 1. Core principles
 
-The 14 non-negotiable beliefs that govern how everything gets built. Ranked by impact — lower-numbered principles override higher when they conflict. Every agent, hook, and workflow must conform or justify the deviation.
+The 15 non-negotiable beliefs that govern how everything gets built. Ranked by impact — lower-numbered principles override higher when they conflict. Every agent, hook, and workflow must conform or justify the deviation.
 
 ### 1.1 Orchestrate, don't execute (the conductor principle)
 **Rule:** The master thread coordinates, synthesizes, and quality-controls — it never writes code, drafts copy, or does research.
@@ -227,6 +235,7 @@ The 14 non-negotiable beliefs that govern how everything gets built. Ranked by i
 **Rule:** Every multi-step process has checkpoints with measurable success criteria and a predetermined failure response.
 **Why:** A 2-week sprint with no intermediate checkpoints means you discover the approach doesn't work only after you've sunk the time.
 **Evidence:** Memeta: 4 checkpoints (days 3, 7, 12, 14) with specific per-checkpoint metrics ("by day 7, memory capture latency <100ms and dedup accuracy >90%"). P2P: daily send limits, sequence limits, business hours enforcement — hard gates, not suggestions.
+**Convergence loops:** When a quality gate fails and the failure is refinement-eligible (not a binary pass/fail), feed the gate failure feedback into the next iteration. This is distinct from retry (same action repeated) — convergence changes the attempt based on what the gate reported. Max iterations cap (default 3) prevents infinite loops. If the gate still fails after max iterations, escalate to human. Example: a steelman pass finds 4 issues → fix all 4 → re-run steelman → finds 1 remaining issue → fix → passes. Each iteration converges on quality, not just retries blind.
 **Anti-pattern:** Validation after the fact — success criteria written after the work to match whatever happened (-> see section 6.4)
 **Enforcement:** Plans require gate criteria (measurable), check schedule (specific dates), and failure response; verification protocol mandatory after every piece of work; `~/.claude/rules/steelman.md`
 **See also:** Pattern 2.8, pattern 2.11, section 4
@@ -289,6 +298,24 @@ The 14 non-negotiable beliefs that govern how everything gets built. Ranked by i
 **Enforcement:** Checkpoint gates (principle 1.7) prevent speed-without-validation. Verification protocol mandatory after every deliverable. Steelman protocol catches false urgency.
 **See also:** Principle 1.7, principle 1.2, section 6.1
 
+### 1.15 Enforce boundaries, don't advise them
+**Rule:** Governance that exists only in prompts, rules files, or documentation is advisory — the agent can ignore it under pressure. Critical boundaries must be enforced by mechanisms that operate independently of agent compliance.
+**Why:** The Gia dashboard was trashed not because the Bible failed, but because it was advisory and got blown past. Rules written in CLAUDE.md rely on the agent reading them, remembering them, and choosing to follow them under pressure. That's three failure points. A PreToolUse hook that blocks execution has zero.
+**Three enforcement levels:**
+
+| Level | Mechanism | Failure mode | Example |
+|-------|-----------|-------------|---------|
+| **Advisory** | Rules files, CLAUDE.md instructions, comments | Agent ignores under pressure or context limits | "Always run steelman before executing" |
+| **Blocking** | Hooks that exit non-zero, gates that halt execution | Can be bypassed with `SKIP_HOOK_*` env vars | `delegation-check.py` blocks after 3 solo executions |
+| **Deterministic** | Process definitions with step-boundary enforcement; the system literally cannot proceed without completing prior steps | Requires code change to bypass | CI pipeline that won't deploy without passing tests |
+
+**The diagnostic question:** For any rule you care about, ask: "If the agent ignored this instruction, what would prevent the violation?" If the answer is "nothing" — it's advisory. Move it up.
+**Process-as-authority:** For critical recurring workflows, the process definition constrains execution, not agent judgment. Steps have entry conditions, quality gates, and mandatory outputs. The conductor operates within declared process boundaries, not above them.
+**Evidence:** `delegation-check.py` (blocking hook) reduced solo execution from 54% to 28%. Meanwhile, purely advisory rules like "always run steelman" have no enforcement data — we don't know how often they're skipped because there's nothing measuring it. The enforcement gap IS the evidence.
+**Anti-pattern:** The advisory illusion — governance that looks rigorous but has no runtime enforcement (-> see section 6.11)
+**Enforcement:** This principle is self-referential — it must be enforced at the level it prescribes. Initial: blocking hooks for critical paths (steelman gate, verification gate, process step enforcer). Target: deterministic enforcement for process-defined workflows.
+**See also:** Principle 1.7 (checkpoints), principle 1.8 (prevention), section 5.6 (enforcement architecture), anti-pattern 6.11
+
 ---
 
 ### Principle interaction model
@@ -303,6 +330,9 @@ Evidence: 93% code reduction on P2P.
 Evidence: zero incidents on P2P post-simplification.
 
 **Knowledge chain (10 -> 5 -> 11):** Document live, store canonically, measure if documentation is used.
+
+**Enforcement chain (15 -> 8 -> 7):** Enforce deterministically, validate before acting, gate at checkpoints.
+Evidence: advisory-only rules have unknown violation rates. Blocking hooks (delegation-check) measurably reduced violations. Deterministic enforcement (CI gates) has zero bypass rate.
 
 **Override rule:** Lower-numbered principles win conflicts. Orchestration (1) overrides documentation (10). QA-first (2) overrides TDD (3). Simplicity (4) overrides config-driven (6).
 
@@ -664,6 +694,19 @@ def pan_for_gold(raw_input: list[str]) -> list[dict]:
 **Proven in:** OB1 "Panning for Gold" recipe — tested across brain dump processing in community.
 **Implements:** Principle 1.2 (QA-first — evaluate after capture, not during), principle 1.10 (document when fresh — capture first, judge later)
 
+### 2.21 Event-sourced decision journal
+**When:** Complex orchestration workflows where you need to audit decisions, resume interrupted work, or prove compliance with process definitions.
+**How:**
+```jsonl
+{"timestamp":"2026-03-19T10:00:00Z","session_id":"abc123","process":"bible-ingestion","step":1,"step_name":"ingest_source","event":"STEP_START","details":{"source":"a5c-ai/babysitter"},"actor":"conductor"}
+{"timestamp":"2026-03-19T10:05:00Z","session_id":"abc123","process":"bible-ingestion","step":1,"step_name":"ingest_source","event":"GATE_PASS","details":{"items_extracted":13},"actor":"conductor"}
+{"timestamp":"2026-03-19T10:06:00Z","session_id":"abc123","process":"bible-ingestion","step":5,"step_name":"review","event":"BREAKPOINT_WAIT","details":{"reason":"human approval required"},"actor":"conductor"}
+```
+**Event types:** `STEP_START`, `STEP_COMPLETE`, `GATE_PASS`, `GATE_FAIL`, `BREAKPOINT_WAIT`, `BREAKPOINT_APPROVED`, `BREAKPOINT_REJECTED`, `CONVERGENCE_ITERATION`, `ERROR`
+**Key distinction from git checkpoints (pattern in §5.1):** Git checkpoints enable rollback — you can undo. The decision journal enables replay and resume — you can audit what happened and continue from where you stopped. Git preserves code state; the journal preserves orchestration state. Use both: git for code safety, journal for process safety.
+**Storage:** Append-only JSONL at `_ Operations/orchestration-journal.jsonl`. Monthly archive rotation. Backed up with nightly `db-backup.sh` rotation.
+**Implements:** Principle 1.10 (document when fresh), principle 1.15 (enforce boundaries — journal provides the audit trail that proves process was followed), principle 1.7 (checkpoints — journal is the checkpoint record)
+
 ---
 
 **Meeting intelligence pipeline:** Transcribe, index with FTS5, extract commitments, search. A workflow, not a reusable pattern.
@@ -691,6 +734,7 @@ def pan_for_gold(raw_input: list[str]) -> list[dict]:
 | External API integrations | 2.18 rate limiting, 2.9 async polling, 2.5 guard chains |
 | Research / brain dumps | 2.20 panning for gold, 2.14 two-level learning |
 | LLM scoring pipelines | 2.4 importance scoring (with anchors), 2.10 AI + heuristic fallback |
+| Agent governance | 2.21 event-sourced journal, 2.8 three-tier enforcement, 2.11 approval queue |
 
 ---
 
@@ -845,36 +889,44 @@ The system enforces principles through four complementary mechanisms. Each has d
 
 | Type | Components | How it works | Enforcement level |
 |------|-----------|-------------|-------------------|
-| Auto-loaded rules | `~/.claude/rules/*.md` (5 files: code-quality, build-bible, voice, steelman, integrations) | Loaded into every session context. Agent reads and follows. | Passive — relies on agent compliance |
-| PreToolUse hooks | delegation-check (blocks after 3 strikes), bloat-watcher (warns >500 lines), questioning-nudge (reminds), skill-usage-tracker (tracks), component-audit (audits), bible-plan-inject (injects Bible §0+§6 on EnterPlanMode) | Run before tool execution. Can block, warn, inject, or track. | Active — executes on every tool call matching the matcher |
+| Auto-loaded rules | `~/.claude/rules/*.md` (5 files: code-quality, build-bible, voice, steelman, integrations) | Loaded into every session context. Agent reads and follows. | Advisory — relies on agent compliance |
+| PreToolUse hooks | delegation-check (blocks after 3 strikes), bloat-watcher (warns >500 lines), questioning-nudge (reminds), skill-usage-tracker (tracks), component-audit (audits), bible-plan-inject (injects Bible §0+§6 on EnterPlanMode) | Run before tool execution. Can block, warn, inject, or track. | Blocking — executes on every tool call matching the matcher |
+| Process definitions | Step-boundary enforced workflows in `_ System/process-definitions/*.md` | Process step enforcer hook reads journal, blocks out-of-sequence steps. | Deterministic — system cannot proceed without completing prior steps |
 | On-demand crusades | `/church` orchestrator with 14 crusade types (size, react, test, type, copy, arch, dead, git, secret, dep, naming, a11y, observability, adaptive) | User invokes; scans codebase for violations of specific principles. | Manual — user-triggered deep scans |
 | On-demand skills | 36+ skills across `~/.claude/skills/` and `_ System/skills/` | Loaded when relevant; provide specialist knowledge and workflows. | Manual — loaded by conductor or user |
 | Slash commands | ~65 qq-* and other commands | User-invoked workflows for session management, code review, agent routing, etc. | Manual — user-triggered |
 
-#### Enforcement traceability matrix
+#### Enforcement contract
 
-Every principle must trace to at least one enforcement mechanism. Gaps are documented in section 9.
+Every principle traces to a current enforcement level and declares a target level. The contract is a governance commitment, not just a diagnostic. Quarterly audits (section 8.2) push principles toward their targets.
 
-| Principle | Enforcement mechanism(s) | Strength |
-|-----------|-------------------------|----------|
-| 1.1 Orchestrate | `delegation-check.py` (PreToolUse hook, blocks after 3 strikes); `delegation-strike-tracker.py` | Active — blocks |
-| 1.2 QA-first | `steelman.md` (auto-loaded rule); `bible-plan-inject.py` (PreToolUse hook, injects §0+§6 on EnterPlanMode); `bible-decision-detector.py` (UserPromptSubmit hook, FTS5 Bible search on decision phrases); QA swarm command; adversarial team protocol | Active — injects + passive + manual |
-| 1.3 TDD | `code-quality.md` rule (Commandment V); `test-driven-development` skill; `/church-test` crusade | Passive + manual |
-| 1.4 Simplicity | `bloat-watcher.py` (PreToolUse hook, warns >500 lines); `/church-size` crusade; `code-quality.md` (Commandment IX) | Active — warns |
-| 1.5 Single source | Architecture review (manual); integration table in section 3.4 | Manual only |
-| 1.6 Config-driven | Code review criterion (manual) | Manual only — GAP |
-| 1.7 Checkpoints | `steelman.md` (auto-loaded rule); verification protocol | Passive |
-| 1.8 Prevention | `code-quality.md` (Commandment II); guard chain pattern (2.5) | Passive |
-| 1.9 Atomic ops | Code review (manual); `atomic_write_json()` utility | Manual only |
-| 1.10 Live docs | Task notes templates; compact instructions protocol | Passive |
-| 1.11 Actionable metrics | Monthly audit (manual) | Manual only — GAP |
-| 1.12 Observability | Deploy phase gate (section 4.5); `/church-observability` crusade | Manual |
-| 1.13 Unhappy path first | `code-quality.md` rule; QA gate (section 4.4) | Passive |
-| 1.14 Speed hides debt | Checkpoint gates (principle 1.7); verification protocol | Passive |
+**Enforcement levels** (per principle 1.15):
+- **Advisory:** Rules files, CLAUDE.md. Agent can ignore. Unknown violation rate.
+- **Blocking:** Hooks that halt execution. Measurable violations. Bypassable with env vars.
+- **Deterministic:** Process definitions, CI gates. System cannot proceed without compliance.
+
+| Principle | Current enforcement | Current level | Target level | Target date |
+|-----------|-------------------|---------------|-------------|-------------|
+| 1.1 Orchestrate | `delegation-check.py` (blocks after 3 strikes) | **Blocking** | Blocking | At target |
+| 1.2 QA-first | `steelman.md` rule + `bible-plan-inject.py` + `bible-decision-detector.py` + QA swarm | Advisory + injection | **Blocking** | Q2 2026 |
+| 1.3 TDD | `code-quality.md` rule + `test-driven-development` skill + `/church-test` | Advisory + manual | **Blocking** | Q3 2026 |
+| 1.4 Simplicity | `bloat-watcher.py` (warns >500 lines) + `/church-size` | Blocking (warns) | Blocking | At target |
+| 1.5 Single source | Architecture review (manual); integration table | Manual only | Advisory | Ongoing |
+| 1.6 Config-driven | Code review criterion (manual) | Manual only — GAP | Advisory | Ongoing |
+| 1.7 Checkpoints | `steelman.md` rule; verification protocol | Advisory | **Blocking** | Q2 2026 |
+| 1.8 Prevention | `code-quality.md` rule; guard chain pattern (2.5) | Advisory | Advisory | Acceptable |
+| 1.9 Atomic ops | Code review (manual); `atomic_write_json()` utility | Manual only | Advisory | Ongoing |
+| 1.10 Live docs | Task notes templates; compact instructions protocol | Advisory | Advisory | Acceptable |
+| 1.11 Actionable metrics | Monthly audit (manual) | Manual only — GAP | Advisory | Ongoing |
+| 1.12 Observability | Deploy phase gate (section 4.5); `/church-observability` | Manual | Advisory | Ongoing |
+| 1.13 Unhappy path first | `code-quality.md` rule; QA gate (section 4.4) | Advisory | Advisory | Acceptable |
+| 1.14 Speed hides debt | Checkpoint gates (1.7); verification protocol | Advisory | Advisory | Acceptable |
+| 1.15 Enforce boundaries | Self-referential — this contract IS the enforcement | Advisory (new) | **Deterministic** (for process-defined workflows) | Q3 2026 |
 
 **Enforcement gaps (see section 9):**
 - Principles 1.6 (config-driven) and 1.11 (actionable metrics) have no automated enforcement
 - Principles 1.5 (single source), 1.9 (atomic ops), and 1.10 (live docs) rely entirely on manual review
+- 5 principles (1.2, 1.3, 1.7, 1.15) have declared targets above their current level — these are the active upgrade queue
 - No automated check exists for config-vs-code boundary violations
 
 ---
@@ -1411,13 +1463,11 @@ Every agent definition must clear this bar before being added to the roster. An 
 
 ---
 
-### 5.6 Agent permission architecture
+### 5.6 Enforcement architecture
 
-**Principle:** Agents operate with the narrowest possible scope. Permission is granted per-task, not per-agent-type.
+**Principle:** The system makes violations impossible for critical paths, not just inadvisable. Agents operate with the narrowest possible scope, and critical workflows operate within declared process boundaries.
 
-**Why:** A dev agent with write access to the entire codebase can make breaking changes to unrelated modules. An agent scoped to `src/auth/` can't. The narrower the scope, the smaller the blast radius of a misguided edit.
-
-**How — scope declaration:**
+#### Agent permission scoping
 
 Every agent task spec should declare:
 - **Read access:** What files/directories the agent may read
@@ -1443,16 +1493,38 @@ Do not modify: any file in src/migrations/, package.json, or any .env file
 2. Report to conductor with three things: (a) what needs to change and why, (b) the recommended approach, (c) the consequence of not acting. Format: "To complete [task], I need to modify [file/system]. Recommended: [specific approach]. If deferred: [consequence]."
 3. Wait for explicit go-ahead before proceeding
 
-**Enforcement status:** MEDIUM debt — currently enforced by task spec convention (manual) and conductor judgment. No automated tooling to enforce declared scopes. Flagged for future PreToolUse hook enforcement.
+#### Process-as-authority
 
-**Implements:** Principle 1.8 (prevent, don't recover), principle 1.1 (conductor as gatekeeper for escalations)
-**See also:** Section 5.4 (agent memory isolation), principle 1.9 (atomic operations)
+For critical recurring workflows, the process definition IS the authority — not agent judgment, not rules files, not the conductor's discretion. Process definitions live at `_ System/process-definitions/*.md` and declare:
+
+- **Steps** with sequential entry conditions (step N requires step N-1 complete)
+- **Quality gates** with measurable pass/fail criteria per step
+- **Human breakpoints** where the process halts for approval (not advisory — halts)
+- **Convergence behavior** for refinement-eligible gates (max 3 iterations before escalation)
+- **Journal integration** — every step transition logs to `_ Operations/orchestration-journal.jsonl` (pattern 2.21)
+
+The `process-step-enforcer.py` hook reads the journal and blocks out-of-sequence step transitions. This is deterministic enforcement: the system cannot skip steps, not "the system advises against skipping steps."
+
+#### Enforcement maturity model
+
+The system's enforcement architecture follows a maturity progression. Each level is appropriate for different risk profiles:
+
+| Level | Mechanism | Bypass | Appropriate for |
+|-------|-----------|--------|----------------|
+| **Advisory** | Rules files, CLAUDE.md, comments | Agent simply doesn't follow | Low-stakes conventions, style preferences |
+| **Blocking** | PreToolUse hooks, exit-code enforcement | `SKIP_HOOK_*` env vars (deliberate) | Important quality gates, delegation, file size |
+| **Deterministic** | Process definitions + step enforcer + journal | Requires code change to bypass | Critical workflows (bible ingestion, project kickoff, deploy) |
+
+Current state: 1 principle at blocking (1.1), 14 at advisory or manual. Target: 5 principles at blocking by Q3 2026 (see enforcement contract in §3.6).
+
+**Implements:** Principle 1.15 (enforce boundaries), principle 1.8 (prevent, don't recover), principle 1.1 (conductor as gatekeeper for escalations)
+**See also:** Section 3.6 (enforcement contract), section 5.4 (agent memory isolation), principle 1.9 (atomic operations), anti-pattern 6.11
 
 ---
 
 ## 6. Anti-patterns
 
-Eight named failure modes drawn from real projects. Each cost real time and real money. The names are canonical -- reference them throughout the bible by number and name.
+Eleven named failure modes drawn from real projects. Each cost real time and real money. The names are canonical -- reference them throughout the bible by number and name.
 
 | # | Anti-pattern | Principle violated | Worst example |
 |---|-------------|-------------------|---------------|
@@ -1464,6 +1536,9 @@ Eight named failure modes drawn from real projects. Each cost real time and real
 | 6.6 | Validate-then-pray | 1.8 Prevention | Catching bounces instead of preventing sends |
 | 6.7 | The god file | 1.4 Simplicity | CLAUDE.md at 800+ lines, 8 duplications |
 | 6.8 | The silent service | 1.12 Observability | Deployed service crashes, nobody notices for days |
+| 6.9 | The silent placeholder | 1.12 Observability | Dashboard shows fake data indistinguishable from real |
+| 6.10 | The unenforceable punchlist | 1.2 QA-first | "Still to verify" list that nobody verifies |
+| 6.11 | The advisory illusion | 1.15 Enforce boundaries | Rules exist but nothing prevents violation |
 
 ---
 
@@ -1568,6 +1643,22 @@ Eight named failure modes drawn from real projects. Each cost real time and real
 **Root cause:** Verification items were listed but had no blocking gate. They could be deferred indefinitely without triggering any failure signal.
 
 **Fix:** Punchlist items that require live testing must either (a) block shipping until tested — verified before the session closes — or (b) be explicitly deferred with a dated Todoist task and a named owner. "We'll test when we have live data" is not a plan. "Todoist task #12345 due Thursday: verify calendar integration with live token" is a plan. A verification claim without evidence is not verification. See principle 1.2 (QA before code) and verification protocol at `_ System/verification-protocols.md`.
+
+---
+
+### 6.11 The advisory illusion
+
+**Symptom:** Governance rules exist in CLAUDE.md, rules files, or documentation — but nothing prevents violation at runtime. The rules look rigorous on paper. In practice, they're suggestions.
+
+**Cost:** The Gia dashboard (2026-03-19) was a full project — 9 scripts, a dashboard, 9 LaunchAgents — built and then trashed. Not because the Build Bible lacked principles against it (§1.2 QA-first, §1.4 simplicity). It did. But those principles were advisory: written in files that rely on the agent reading them, remembering them, and choosing to follow them under pressure. Under the momentum of a build, advisory rules get blown past. The entire project was a dead loss.
+
+**Diagnostic question:** "If the agent ignored this instruction, what would prevent the violation?" If the answer is "nothing" — it's advisory. The rule is theater.
+
+**Root cause:** Conflating "rule exists" with "rule is enforced." A principle in a rules file is a hope. A PreToolUse hook that blocks execution is a gate. A process definition with step-boundary enforcement is a wall. The advisory illusion treats hope as governance.
+
+**Fix:** Classify every critical rule by enforcement level (advisory / blocking / deterministic — see principle 1.15). Move the most important rules up the ladder. Not everything needs to be blocking — advisory is fine for conventions and preferences. But rules that protect against catastrophic waste (like building without product thinking) must be blocking minimum. Track upgrade progress via the enforcement contract (section 3.6).
+
+**See also:** Principle 1.15 (enforce boundaries), section 3.6 (enforcement contract), section 5.6 (enforcement architecture)
 
 ---
 
@@ -1771,8 +1862,9 @@ Rules can also be **demoted or deleted**. If a rule isn't catching real violatio
 
 ### 8.2 Review cadence
 
-- **Monthly:** Review learning captures from `learnings-queue.md`. Check hook event logs for rules that never fire (candidates for removal). Check for new patterns that should become rules. Verify no new duplications have crept in. Update metrics baselines.
-- **Quarterly:** Full bible review, section-by-section. Verify all evidence citations still hold. Confirm all cross-references are valid. Check line budgets and compress any section that has drifted over target.
+- **Monthly:** Review learning captures from `learnings-queue.md`. Check hook event logs for rules that never fire (candidates for removal). Check for new patterns that should become rules. Verify no new duplications have crept in. Update metrics baselines. **Review enforcement contract (§3.6):** For each principle, check: is it at its target level? If not, what's blocking? Update the contract.
+- **Quarterly:** Full bible review, section-by-section. Verify all evidence citations still hold. Confirm all cross-references are valid. Check line budgets and compress any section that has drifted over target. **Push at least one principle from advisory → blocking.** Prioritize by incident history (which advisory rules were violated and cost real time?).
+- **Annually:** Full enforcement architecture review (§5.6). Assess whether deterministic enforcement is achievable for any principles currently at blocking level. Review process definitions for staleness.
 - **On-demand:** After any project completion, run a post-project retrospective. Extract learnings, update the known debt table (section 9), and propose new principles or patterns that emerged.
 
 **Trigger for immediate update:** Any change to the system that contradicts existing bible content (e.g., a new integration replaces an old one, a pattern is proven wrong by evidence).
@@ -1910,6 +2002,7 @@ Current technical debt and system gaps, prioritized by severity. This is a livin
 | Medium | No automated enforcement for config-driven principle (1.6) | Config-vs-code boundary violations undetected until manual review | Not started |
 | Medium | No automated enforcement for actionable metrics principle (1.11) | Vanity metrics can accumulate without triggering cleanup | Not started |
 | Medium | Principles 1.5, 1.9, 1.10 rely on manual-only enforcement | Single source of truth, atomic ops, and live docs have no hooks or automated checks | Not started |
+| High | Most principles enforced at advisory level only | 12 of 15 principles rely on agent compliance with no runtime enforcement; violations undetected until after damage (see §6.11) | Enforcement contract declared (§3.6); 4 principles queued for upgrade to blocking |
 
 ---
 
@@ -1928,12 +2021,12 @@ Four specific hook system issues identified during the wave 2 rules audit (sourc
 
 ### Debt summary
 
-- **15 items total:** 2 critical, 3 high, 7 medium, 3 low
+- **16 items total:** 2 critical, 4 high, 7 medium, 3 low
 - **4 hook-specific issues** with proposed fixes ready for implementation
-- **3 enforcement gaps** identified by traceability matrix (section 3.6)
-- **Top priority:** The two critical items (transcript fragmentation and CLAUDE.md hierarchy) should be addressed before the next quarterly review
+- **5 enforcement gaps** identified by enforcement contract (section 3.6) — 4 principles queued for upgrade to blocking
+- **Top priority:** The two critical items (transcript fragmentation and CLAUDE.md hierarchy) should be addressed before the next quarterly review. Advisory-level enforcement is newly classified as HIGH.
 - **Quick wins:** Hook README update (low) and circuit breaker addition (high) are small-scope, high-impact fixes
-- **Cross-references:** Section 3.3 (hook system), section 3.2 (CLAUDE.md hierarchy), section 3.6 (enforcement traceability), section 8.1 (how updates happen)
+- **Cross-references:** Section 3.3 (hook system), section 3.2 (CLAUDE.md hierarchy), section 3.6 (enforcement contract), section 5.6 (enforcement architecture), section 8.1 (how updates happen)
 
 ---
 
@@ -1958,6 +2051,7 @@ These repos were directly ingested, studied, or installed — and their patterns
 | **[dandaka/traul](https://github.com/dandaka/traul)** | dandaka | Cross-channel communication search patterns, dual search strategy (FTS5 + vector), context quality vs quantity, agent self-iteration on search queries | Principle 1.8 (LLM evaluation defense), pattern 2.4 (score calibration). Reddit discussion informed multiple ADDITIVE items. | v1.7.0 (2026-03-17) |
 | **[jj-valentine/cerebellum](https://github.com/jj-valentine/cerebellum)** | jj-valentine | Three-stage pipeline (Operator → Gatekeeper → Human Review), score calibration via anchor examples, directive type hierarchy for knowledge reformulation, adversarial review for borderline content, prompt injection defense in evaluation prompts, capture reason as quality signal | Pattern 2.4 (anchor calibration), principle 1.8 (LLM prompt injection defense), pattern 2.14 (directive hierarchy), section 5.5 (borderline review) | v1.7.0 (2026-03-17) |
 | **[NateBJones-Projects/OB1](https://github.com/NateBJones-Projects/OB1)** | Nate B Jones | Sacred core schema constraint, compound extension architecture (cross-table queries), content fingerprinting for idempotent imports, "Panning for Gold" three-phase processing, two-layer review (mechanical CI + judgment-based Claude review) | Principle 1.5 (schema protection), pattern 2.2 (extension composability), pattern 2.6 (content fingerprinting companion), pattern 2.20 (panning for gold) | v1.7.0 (2026-03-17) |
+| **[a5c-ai/babysitter](https://github.com/a5c-ai/babysitter)** | a5c-ai (surfaced by Mike Bodkin, Bureau Slack) | Process-as-code philosophy, step-boundary enforcement, event journal for orchestration state, convergence loops for quality gates, enforcement maturity model (advisory → blocking → deterministic) | Principle 1.15 (enforce boundaries). Pattern 2.21 (event-sourced decision journal). Section 5.6 (enforcement architecture). Section 3.6 (enforcement contract). Anti-pattern 6.11 (advisory illusion). Convergence loops in §1.7. | v2.0.0 (2026-03-19) |
 | **[msitarzewski/agency-agents](https://github.com/msitarzewski/agency-agents)** | M. Sitarzewski | 120+ specialized agent definitions across 16 divisions. Agent definition quality bar (distinct voice, concrete deliverables, measurable success criteria, workflow, guardrails). Zero-findings skepticism heuristic. Retry limit before approach change. Escalation report format (problem + recommendation + consequence). Blameless post-mortem protocol. | Section 5.5 (quality bar, zero-findings heuristic). Section 5.1 (retry limit). Section 5.6 (escalation format). Section 4.6 (post-mortem protocol). 14 new agent definitions added to roster. | v1.6.0 (2026-03-11) |
 
 **Jesse Vincent deserves special mention.** His [Superpowers](https://github.com/obra/superpowers) repo and [blog posts](https://blog.fsck.com/2025/10/09/superpowers/) provided the most directly actionable patterns for TDD enforcement, verification protocols, and agent review workflows. The v1.2.1 update was essentially a Superpowers integration. His [post on naming Claude plugins](https://blog.fsck.com/2025/10/23/naming-claude-plugins/) also informed our skills/commands/agents taxonomy.
@@ -2069,9 +2163,10 @@ The bible is better for all of it. If you recognize your idea here and we missed
 
 Detailed changelog with rationale, source, and evaluation criteria: `_ System/Build bible changelog.md`
 
-**Current version:** 1.7.0 (2026-03-18)
+**Current version:** 2.0.0 (2026-03-19)
 
 **Recent changes:**
+- 2.0.0: **Philosophical shift — from advisory to enforced.** New principle 1.15 (enforce boundaries, don't advise them) with three enforcement levels. New anti-pattern 6.11 (the advisory illusion). New pattern 2.21 (event-sourced decision journal). Convergence loops added to §1.7. §5.6 upgraded from agent permissions to enforcement architecture (process-as-authority, maturity model). §3.6 upgraded from traceability matrix to enforcement contract with current/target levels per principle. New enforcement chain (15 → 8 → 7). Debt item for advisory-level enforcement. Audit cadence expanded with quarterly enforcement upgrade targets and annual review. Credits for a5c-ai/babysitter + Mike Bodkin.
 - 1.7.0: Multi-source batch ingestion (traul, cerebellum, OB1). 7 ADDITIVE: score calibration anchors (2.4), LLM prompt injection defense (1.8), content fingerprinting for imports (2.6), directive type hierarchy for promotions (2.14), sacred core schema (1.5), extension composability (2.2), borderline adversarial review (5.5). 1 NOVEL: "Panning for Gold" three-phase discovery processing (new pattern 2.20). Credits added for dandaka/traul, jj-valentine/cerebellum, NateBJones-Projects/OB1.
 - 1.4.1: 1-shot prompt test diagnostic (1.4), AI force multiplier framing (1.14), codify agent failures as preventive rules (8.3), brittle assertion note routed to code-quality.md — from r/ClaudeCode community batch
 - 1.4.0: Git checkpoint protocol for agent runs (5.1), agent memory isolation protocol (5.4), --resume targeting note (5.1) — from r/ClaudeCode community best practices
