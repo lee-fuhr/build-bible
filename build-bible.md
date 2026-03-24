@@ -550,6 +550,16 @@ def check_promotion(learning) -> bool:
 # Lifecycle: capture (project) -> cross-validate -> promote (universal) -> human review
 ```
 **Proven in:** LFI learning system — learnings captured per-project, promoted to master guidelines when confirmed across 3+ projects. VBF messaging sequence and villain naming pattern both promoted from client work to universal practice.
+**Longevity check (mandatory before promotion):** Before promoting any learning, classify it by lifecycle type:
+
+| Lifecycle type | Definition | Durability test | Example |
+|----------------|-----------|----------------|---------|
+| **Permanent** | Universal truth unlikely to change | "Will this still be true if the tooling changes completely?" | Single source of truth, TDD red-green-refactor |
+| **Workaround** | True until a better solution exists | "What would make this obsolete?" Document the trigger. | File marker for session ID (until env var available) |
+| **Gap-signal** | Marks missing capability | "Is this a real principle or a placeholder for missing capability?" | Manual learning promotion (until automated threshold triggers) |
+
+Workarounds and gap-signals must include their expiration trigger. Permanent principles require stronger evidence (3+ projects, adversarial review). This prevents the bible from accumulating entries that should have been temporary — expired workarounds persisting as load-bearing rules long after the underlying problem was solved differently.
+
 **Reformulation on promotion:** When promoting a learning to universal status, recast it into the highest-impact directive format that fits: (1) Hard prohibition ("Never X because Y") — highest impact, (2) Preference with context ("Prefer X over Y when Z"), (3) Anti-pattern + consequence ("When we did X, Y happened"), (4) Process requirement ("Always X before Y"), (5) Scope guard ("Only X if [condition]"). Higher-impact formats are more useful to future agents — "Never deploy without a rollback plan because we lost 3 days recovering from a bad deploy" beats "rollback plans are good practice."
 **Pointer:** `_ System/reference/learnings-system.md`
 **Implements:** Principle 1.10 (live docs), principle 1.5 (single source)
