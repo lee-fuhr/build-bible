@@ -4,6 +4,17 @@ All notable changes to the Build Bible are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/) — MAJOR for structural changes, MINOR for new principles/patterns, PATCH for refinements.
 
+## [2.1.0] - 2026-03-24
+
+Added knowledge lifecycle classification to the Bible's promotion process, inspired by CQ (Mozilla AI). Knowledge proposed for the Bible must now pass a longevity check — classified as permanent, workaround, or gap-signal — before promotion.
+
+### Added
+- **Longevity check** (§8.3) — mandatory lifecycle classification before Bible promotion. Three types: permanent (universal truth), workaround (true until better solution), gap-signal (placeholder for missing capability). Workarounds and gap-signals must document their expiration trigger.
+- **Workaround expiration** as new Bible deletion criterion — when the trigger fires, the entry gets removed.
+
+### Credits
+- [CQ (Conversational Quality)](https://github.com/mozilla-ai/cq) by Mozilla AI — lifecycle classification patterns.
+
 ## [2.0.0] - 2026-03-19
 
 Philosophical shift in how the Bible treats enforcement. Inspired by reviewing [a5c-ai/babysitter](https://github.com/a5c-ai/babysitter) (shared by Mike Bodkin in Bureau Slack) and the Gia dashboard incident (2026-03-19). The core insight: our system advises discipline but doesn't enforce it. Advisory rules get blown past under build momentum. This version reframes enforcement from "the conductor is disciplined" to "the system makes violations impossible for critical paths."

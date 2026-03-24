@@ -1,6 +1,6 @@
 # How we build
-**Version:** 2.0.0
-**Last updated:** 2026-03-19
+**Version:** 2.1.0
+**Last updated:** 2026-03-24
 **Scope:** Product building principles, patterns, and operations for Lee Fuhr's AI-augmented consulting practice.
 **Source:** Distilled from 10+ software products across 68+ sessions. Adversarially reviewed by 3 independent agents.
 
@@ -1890,11 +1890,24 @@ Rules can also be **demoted or deleted**. If a rule isn't catching real violatio
 - Has a specific enforcement mechanism (hook, CLAUDE.md rule, or manual review)
 - Human review approved (Lee signs off on all promotions)
 
+**Longevity check (mandatory before promotion):**
+
+Before promoting any knowledge to the bible, classify it by lifecycle type and apply the appropriate durability test:
+
+| Lifecycle type | Definition | Durability test | Example |
+|----------------|-----------|----------------|---------|
+| **Permanent** | Universal truth unlikely to change | "Will this still be true if the tooling changes completely?" | Single source of truth, TDD red-green-refactor |
+| **Workaround** | True until a better solution exists | "What would make this obsolete?" Document the trigger. | File marker for session ID (until env var available) |
+| **Gap-signal** | Marks something the system doesn't know yet | "Is this a real principle or a placeholder for missing capability?" | Manual learning promotion (until automated threshold triggers) |
+
+Workarounds and gap-signals must include their expiration trigger in the bible entry. Permanent principles require stronger evidence (5+ projects, adversarial review). This classification prevents the bible from accumulating entries that should have been temporary — a common failure mode where expired workarounds persist as load-bearing rules long after the underlying problem was solved differently.
+
 **What gets deleted from the bible:**
 - Not referenced in 6 months (no hook fires, no agent invokes it, no session uses it)
 - Contradicted by evidence (a principle that demonstrably produces worse outcomes)
 - Superseded by a better pattern (the replacement is documented before deletion)
 - Failed its trial period (2-week advisory showed no improvement)
+- Workaround whose expiration trigger has fired (the better solution now exists)
 
 #### Codify agent failures as preventive rules
 
